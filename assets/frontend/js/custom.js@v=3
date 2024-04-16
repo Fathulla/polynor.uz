@@ -1,0 +1,492 @@
+$(document).ready(function (){
+    'use strict';
+
+    $.ajaxSetup({
+        headers: {
+            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+        }
+    });
+
+    $(document).on('click', '#addButton', function (e){
+        e.preventDefault();
+        var $this = $(this),
+            data = {
+                type: $this.attr('data-type'),
+                lang: $this.attr('data-lang-id'),
+                locale: $this.attr('data-locale'),
+                page: $this.attr('data-page')
+            };
+
+        $.ajax({
+            url : '/'+data.locale+'/ajax/addItems',
+            data : data,
+            type : 'post',
+            dataType: 'json',
+            success : function(json)
+            {
+                $('#blockItems').append(json.html);
+                $this.attr('data-page', json.page)
+                $this.attr('href', json.link)
+                if (!json.showButton) {
+                    $this.hide();
+                }
+            }
+        });
+    });
+
+    $(document).on('click', '#addButton2', function (e){
+        e.preventDefault();
+        var $this = $(this),
+            data = {
+                type: $this.attr('data-type'),
+                lang: $this.attr('data-lang-id'),
+                locale: $this.attr('data-locale'),
+                page: $this.attr('data-page'),
+                rubric: $this.attr('data-rubric')
+            };
+
+        $.ajax({
+            url : '/ru/ajax/addItems2',
+            data : data,
+            type : 'post',
+            dataType: 'json',
+            success : function(json)
+            {
+                $('#blockItems').append(json.html);
+                $this.attr('data-page', json.page)
+                $this.attr('href', json.link)
+                if (!json.showButton) {
+                    $this.hide();
+                }
+            }
+        });
+    });
+
+    $('.js-add-to-cart').on('click',  function (e){
+        e.preventDefault();
+        var $this = $(this),
+            data = {
+                id: $this.attr('data-id'),
+                locale: $this.attr('data-locale'),
+                count: $this.attr('data-count')
+            };
+
+dataLayer.push({
+  'event': 'addToCart',
+  'ecommerce': {
+    'currencyCode': 'RUR',
+    'add': {                                // 'add' actionFieldObject measures.
+      'products': [{                        //  adding a product to a shopping cart.
+        'name': $this.attr('data-name'),
+        'id': $this.attr('data-id'),
+        'price': $this.attr('data-price'),
+        'brand': 'Polynor',
+        'quantity': 1
+       }]
+    }
+  }
+});
+
+        $.ajax({
+            url : '/ru/ajax/addToCart',
+            data : data,
+            type : 'post',
+            dataType: 'json',
+            success : function(json)
+            {
+                $('#cart').removeClass('empty').find('.cart__count').text(json.count)
+            }
+        });
+    });
+
+    $('.js-count-minus').on('click', function (e){
+        e.preventDefault();
+        var $this = $(this),
+            input = $this.siblings('.js-count'),
+            data = {
+                id: input.attr('data-id'),
+                count: input.val(),
+                type: $this.attr('data-type'),
+                locale: input.attr('data-locale')
+            };
+        $.ajax({
+            url : '/ru/ajax/changeCount',
+            data : data,
+            type : 'post',
+            dataType: 'json',
+            success : function(json)
+            {
+                var btn = $('.js-btn-order'),
+                    j_data = btn.data();
+                if ((json.sumPrice < j_data.minSumPriceOrder)) {
+                    btn.hide();
+                    $('.js-cart-min-message').show();
+                } else {
+                    btn.show();
+                    $('.js-cart-min-message').hide();
+                }
+
+                input.val(json.countItem);
+                $('.discount').text(json.discount);
+                $('.discount').val(json.discount);
+                $('.sumPrice').text(json.sumPrice);
+                $('.sumPrice').val(json.sumPrice);
+            }
+        });
+
+    });
+
+    $(document).on('click', '.js-count-plus', function (e){
+        e.preventDefault();
+        var $this = $(this),
+            input = $this.siblings('.js-count'),
+            data = {
+                id: input.attr('data-id'),
+                count: input.val(),
+                type: $this.attr('data-type'),
+                locale: $this.siblings('.js-count').attr('data-locale')
+            };
+        $.ajax({
+            url : '/ru/ajax/changeCount',
+            data : data,
+            type : 'post',
+            dataType: 'json',
+            success : function(json)
+            {
+                var btn = $('.js-btn-order'),
+                    j_data = btn.data();
+                if ((json.sumPrice > j_data.minSumPriceOrder)) {
+                    btn.show();
+                    $('.js-cart-min-message').hide();
+                } else {
+                    btn.hide();
+                    $('.js-cart-min-message').show();
+                }
+
+                input.val(json.countItem);
+                $('.discount').text(json.discount);
+                $('.discount').val(json.discount);
+                $('.sumPrice').text(json.sumPrice);
+                $('.sumPrice').val(json.sumPrice);
+            }
+        });
+
+    });
+
+    $(document).on('blur', '.js-count', function (e){
+        e.preventDefault();
+        var $this = $(this),
+            input = $this,
+            data = {
+                id: input.attr('data-id'),
+                count: input.val(),
+                type: $this.attr('data-type'),
+                locale: input.attr('data-locale')
+            };
+        console.log('data', data);
+        $.ajax({
+            url : '/ru/ajax/changeCount',
+            data : data,
+            type : 'post',
+            dataType: 'json',
+            success : function(json)
+            {
+                var btn = $('.js-btn-order'),
+                    j_data = btn.data();
+                if ((json.sumPrice > j_data.minSumPriceOrder)) {
+                    btn.show();
+                    $('.js-cart-min-message').hide();
+                } else {
+                    btn.hide();
+                    $('.js-cart-min-message').show();
+                }
+
+                input.val(json.countItem);
+                $('.discount').text(json.discount);
+                $('.discount').val(json.discount);
+                $('.sumPrice').text(json.sumPrice);
+                $('.sumPrice').val(json.sumPrice);
+            }
+        });
+
+    });
+
+    $(document).on('click', '.j-delete-item', function (e){
+        e.preventDefault();
+        var $this = $(this),
+            data = {
+                id: $this.attr('data-id'),
+                lang: $this.attr('data-lang')
+            };
+        $.ajax({
+            url : '/ru/ajax/deleteItem',
+            data : data,
+            type : 'post',
+            dataType: 'json',
+            success : function(json)
+            {
+                var btn = $('.js-btn-order'),
+                    j_data = btn.data();
+                if ((json.sumPrice > j_data.minSumPriceOrder)) {
+                    btn.show();
+                    $('.js-cart-min-message').hide();
+                } else {
+                    btn.hide();
+                    $('.js-cart-min-message').show();
+                }
+
+                var length = $this.closest('table').find('tr').length;
+                $('.discount').text(json.discount);
+                $('.discount').val(json.discount);
+                $('.sumPrice').text(json.sumPrice);
+                $('.sumPrice').val(json.sumPrice);
+                if (length < 3) {
+                    $('#cart').addClass('empty');
+                    location.reload();
+                } else {
+                    $this.closest('tr').remove();
+                }
+
+            }
+        });
+
+    });
+
+
+    if( $('#shops-map').length ) {
+
+      ymaps.ready(init);
+
+    }
+    
+    $(document).on('click', '.js-calculate', function (e){
+        e.preventDefault();
+        var $this = $(this),
+            form = $this.closest('form'),
+            data = {
+                layer: form.find('select[name="layers"] option:selected').val(),
+                area: form.find('input[name="area"]').val(),
+                ratio: form.find('input[name="ratio"]').val()
+            }, result;
+
+        result = Math.ceil(Number(data.layer) * Number(data.area) * parseFloat(data.ratio));
+        form.find('.js-count').text(result);
+        if (!$this.hasClass('show')) {
+            $this.addClass('show');
+            $('#js-result').find('div').toggleClass('hidden');
+        }
+        form.find('.js-add-to-cart').attr('data-count',result)
+
+        // console.log('data', data);
+        console.log('result', result);
+
+    });
+
+    $(document).on('click', '#js-promo-code-button', function (e){
+        e.preventDefault();
+        var $this = $(this),
+            data = {
+                code: $('#js-promo-code').val()
+            };
+        $.ajax({
+            url : '/ru/ajax/recalculation',
+            data : data,
+            type : 'post',
+            dataType: 'json',
+            success : function(json)
+            {
+                if (json.success) {
+                    $('.discount').text(json.discount);
+                    $('.discount').val(json.discount);
+                    $('.sumPrice').text(json.sumPrice);
+                    $('.sumPrice').val(json.sumPrice);
+                } else {
+                    $('#js-promo-code').css('border', 'solid 1px red');
+                }
+            }
+        });
+    });
+
+    $(document).on('click', '#js-question', function (e){
+        e.preventDefault();
+        var $this = $(this),
+            form = $this.closest('form'),
+            data = form.serialize();
+        $.ajax({
+            url : form.attr('action'),
+            data : data,
+            type : 'post',
+            dataType: 'json',
+            success : function(json)
+            {
+                if (json.success) {
+                    $.magnificPopup.open({
+                        items: {
+                            src: json.msg,
+                            type: 'inline'
+                        }
+                    });
+                    dataLayer.push({'event': 'question-send'});
+                    form.find('input').val('');
+                    form.find('textarea').text('').val('');
+                } else {
+                    form.find('.form__input-wrap')
+                        .removeClass('error');
+                    $.each(json.error, function (i, v){
+                        form.find('[name="'+v+'"]')
+                            .closest('.form__input-wrap')
+                            .addClass('error');
+                    });
+                }
+            }
+        });
+    });
+
+    $(document).on('click', '#js-contacts', function (e){
+        e.preventDefault();
+        var $this = $(this),
+            form = $this.closest('form'),
+            data = form.serialize();
+        $.ajax({
+            url : form.attr('action'),
+            data : data,
+            type : 'post',
+            dataType: 'json',
+            success : function(json)
+            {
+                if (json.success) {
+                    $.magnificPopup.open({
+                        items: {
+                            src: json.msg,
+                            type: 'inline'
+                        }
+                    });
+                    dataLayer.push({'event': 'contacts-send'});
+                    form.find('input').val('');
+                    form.find('textarea').text('').val('');
+                } else {
+                    form.find('.form__input-wrap')
+                        .removeClass('error');
+                    $.each(json.error, function (i, v){
+                        form.find('[name="'+v+'"]')
+                            .closest('.form__input-wrap')
+                            .addClass('error');
+                    });
+                }
+            }
+        });
+    });
+
+    $(document).on('click', '#js-to-dealer', function (e){
+        e.preventDefault();
+        var $this = $(this),
+            form = $this.closest('form'),
+            data = form.serialize();
+        $.ajax({
+            url : form.attr('action'),
+            data : data,
+            type : 'post',
+            dataType: 'json',
+            success : function(json)
+            {
+                if (json.success) {
+                    $.magnificPopup.open({
+                        items: {
+                            src: json.msg,
+                            type: 'inline'
+                        }
+                    });
+                    dataLayer.push({'event': 'dealer-send'});
+                    form.find('input').val('');
+                    form.find('textarea').text('').val('');
+                } else {
+                    form.find('.form__input-wrap')
+                        .removeClass('error');
+                    $.each(json.error, function (i, v){
+                        form.find('[name="'+v+'"]')
+                            .closest('.form__input-wrap')
+                            .addClass('error');
+                    });
+
+                }
+            }
+        });
+    });
+
+});
+
+function addFeature(city, reinit){
+    var block = $('#js-panel-shops-block'),
+        data = {
+            city: city,
+            locale: block.attr('data-locale')
+        };
+    console.log('data', data);
+    $.ajax({
+        url : '/ru/ajax/addFeature',
+        data : data,
+        type : 'post',
+        dataType: 'json',
+        success : function(json) {
+
+            console.log('json', json);
+            if(reinit) {
+                var api = block.data('jsp');
+                api.getContentPane().html(json.html);
+                api.reinitialise();
+            } else {
+                block.html(json.html).jScrollPane();
+            }
+        }
+    });
+}
+
+function init() {
+    var geolocation = ymaps.geolocation;
+    myMap = new ymaps.Map('shops-map', {
+        center: [60.5991, 56.8351],
+        zoom: 4
+    }, {});
+    objectManager = new ymaps.ObjectManager({
+        clusterize: true,
+        gridSize: 32,
+        clusterDisableClickZoom: true
+    });
+    var city;
+
+    ymaps.geolocation.get({
+        provider: 'yandex',
+        mapStateAutoApply: true
+    }).then(function (result) {
+        result.geoObjects.options.set('preset', 'islands#redCircleIcon');
+        result.geoObjects.get(0).properties.set({
+            balloonContentBody: 'Мой город '+result.geoObjects.get(0).properties._data.name
+        });
+        myMap.geoObjects.add(result.geoObjects);
+
+        city =  result.geoObjects.get(0).properties._data.name;
+        objectManager.objects.options.set('preset', '/img/1.svg');
+        objectManager.clusters.options.set('preset', '/img/1.svg');
+        console.log('objectManager', objectManager);
+        myMap.geoObjects.add(objectManager);
+        setPoints(city);
+
+        objectManager.add(obj);
+        addFeature(city);
+    });
+    var searchControl = myMap.controls.get('searchControl');
+    searchControl.events.add('submit', function () {
+        city = searchControl.getRequestString();
+        var myGeocoder = ymaps.geocode(city);
+        myGeocoder.then(function (res) {
+            var city = res.geoObjects.get(0).properties._data.name;
+
+            console.log('city', city);
+            addFeature(city, true);
+        });
+    }, this);
+}
+
+function setPoints(){
+    objectManager.add(obj);
+}
